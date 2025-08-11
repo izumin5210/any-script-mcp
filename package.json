@@ -6,7 +6,9 @@
   "bin": {
     "any-scripts-mcp-server": "./out/index.ts"
   },
-  "files": ["./out/"],
+  "files": [
+    "./out/"
+  ],
   "keywords": [],
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
@@ -14,15 +16,21 @@
   "packageManager": "pnpm@10.14.0",
   "scripts": {
     "build": "tsc && chmod +x ./out/index.js",
-    "check": "biome check --write"
+    "check": "biome check --write",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.4",
     "@types/node": "22.17.1",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.2",
+    "execa": "^9.6.0",
+    "xdg-basedir": "^5.1.0",
+    "yaml": "^2.8.1",
     "zod": "^3.25.76"
   }
 }

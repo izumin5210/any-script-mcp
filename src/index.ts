@@ -1,43 +1,91 @@
 #!/usr/bin/env node
 
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { loadConfig, type ToolConfig } from "./config.js";
+import { executeCommand } from "./executor.js";
 
-// Create an MCP server
-const server = new McpServer({
-  name: "any-scripts-mcp-server",
-  version: "1.0.0"
-});
+async function main() {
+  const server = new McpServer({
+    name: "any-scripts-mcp-server",
+    version: "1.0.0",
+  });
 
-// Add an addition tool
-server.registerTool("add",
-  {
-    title: "Addition Tool",
-    description: "Add two numbers",
-    inputSchema: { a: z.number(), b: z.number() }
-  },
-  async ({ a, b }) => ({
-    content: [{ type: "text", text: String(a + b) }]
-  })
-);
+  // Load configuration file
+  let config: Awaited<ReturnType<typeof loadConfig>>;
+  try {
+    config = await loadConfig();
+  } catch (error) {
+    console.error("Failed to load config:", error);
+    process.exit(1);
+  }
 
-// Add a dynamic greeting resource
-server.registerResource(
-  "greeting",
-  new ResourceTemplate("greeting://{name}", { list: undefined }),
-  {
-    title: "Greeting Resource",      // Display name for UI
-    description: "Dynamic greeting generator"
-  },
-  async (uri, { name }) => ({
-    contents: [{
-      uri: uri.href,
-      text: `Hello, ${name}!`
-    }]
-  })
-);
+  // Register each tool
+  for (const tool of config.tools) {
+    // Generate input schema dynamically
+    const inputSchema = createInputSchema(tool);
 
-// Start receiving messages on stdin and sending messages on stdout
-const transport = new StdioServerTransport();
-await server.connect(transport);
+    server.registerTool(
+      tool.name,
+      {
+        title: tool.name,
+        description: tool.description,
+        inputSchema,
+      },
+      async (inputs) => {
+        try {
+          const output = await executeCommand(tool, inputs);
+          return {
+            content: [{ type: "text", text: output }],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+              },
+            ],
+          };
+        }
+      },
+    );
+  }
+
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+}
+
+function createInputSchema(tool: ToolConfig) {
+  const shape: Record<string, z.ZodTypeAny> = {};
+
+  for (const [name, input] of Object.entries(tool.inputs)) {
+    let schema: z.ZodTypeAny;
+
+    switch (input.type) {
+      case "string":
+        schema = z.string().describe(input.description);
+        break;
+      case "number":
+        schema = z.number().describe(input.description);
+        break;
+      case "boolean":
+        schema = z.boolean().describe(input.description);
+        break;
+    }
+
+    // Apply default value if exists
+    if (input.default !== undefined) {
+      schema = schema.default(input.default);
+    } else if (input.required === false) {
+      schema = schema.optional();
+    }
+
+    shape[name] = schema;
+  }
+
+  return shape;
+}
+
+main().catch(console.error);
