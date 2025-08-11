@@ -1,4 +1,4 @@
-# any-scripts-mcp-server
+# any-script-mcp
 
 任意のCLIツールやシェルスクリプトをMCP Toolとして提供できるMCPサーバー
 
@@ -15,7 +15,7 @@ pnpm build
 
 ## 設定
 
-設定ファイルを `$XDG_CONFIG_HOME/any-scripts-mcp-server/config.yaml` に配置します（通常は `~/.config/any-scripts-mcp-server/config.yaml`）。
+設定ファイルを `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` に配置します（通常は `~/.config/any-script-mcp/config.yaml`）。
 
 ### 設定ファイルの例
 

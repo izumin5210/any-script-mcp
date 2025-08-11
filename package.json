@@ -1,10 +1,10 @@
 {
-  "name": "any-scripts-mcp-server",
+  "name": "any-script-mcp",
   "version": "0.0.0",
   "description": "MCP server that exposes arbitrary CLI tools and shell scripts as MCP Tools via YAML configuration",
   "main": "./out/index.js",
   "bin": {
-    "any-scripts-mcp-server": "./out/index.ts"
+    "any-script-mcp": "./out/index.ts"
   },
   "files": [
     "./out/"

@@ -43,7 +43,7 @@ export async function loadConfig(): Promise<Config> {
   const configDir = xdgConfig || path.join(homedir(), ".config");
   const configPath = path.join(
     configDir,
-    "any-scripts-mcp-server",
+    "any-script-mcp",
     "config.yaml",
   );
 

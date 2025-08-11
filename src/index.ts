@@ -8,7 +8,7 @@ import { executeCommand } from "./executor.js";
 
 async function main() {
   const server = new McpServer({
-    name: "any-scripts-mcp-server",
+    name: "any-script-mcp",
     version: "1.0.0",
   });
 

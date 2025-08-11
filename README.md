@@ -1,4 +1,4 @@
-# any-scripts-mcp-server
+# any-script-mcp
 
 An MCP server that exposes arbitrary CLI tools and shell scripts as MCP Tools
 
@@ -17,7 +17,7 @@ pnpm build
 
 ## Configuration
 
-Place the configuration file at `$XDG_CONFIG_HOME/any-scripts-mcp-server/config.yaml` (typically `~/.config/any-scripts-mcp-server/config.yaml`).
+Place the configuration file at `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` (typically `~/.config/any-script-mcp/config.yaml`).
 
 ### Example Configuration
 
