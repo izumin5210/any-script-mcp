@@ -37,6 +37,16 @@ json:
 
 Create a configuration file at `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` (typically `~/.config/any-script-mcp/config.yaml`).
 
+### Testing Your Configuration
+
+You can test your configuration using the MCP Inspector:
+
+```shell-session
+$ npx @modelcontextprotocol/inspector npx any-script-mcp
+```
+
+This will open a web interface where you can see your registered tools and test them interactively.
+
 ### Example Configuration
 
 ```yaml

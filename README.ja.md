@@ -35,6 +35,16 @@ json:
 
 設定ファイルを `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` に作成します（通常は `~/.config/any-script-mcp/config.yaml`）。
 
+### 設定のテスト
+
+MCP Inspectorを使って設定をテストできます：
+
+```shell-session
+$ npx @modelcontextprotocol/inspector npx any-script-mcp
+```
+
+登録されたツールを確認し、対話的にテストできるWebインターフェースが開きます。
+
 ### 設定ファイルの例
 
 ```yaml
