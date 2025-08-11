@@ -24,7 +24,8 @@
     "build": "tsc && chmod +x ./out/index.js",
     "check": "biome check --write",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.4",

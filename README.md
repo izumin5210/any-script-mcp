@@ -10,14 +10,32 @@ An MCP server that publishes commands defined in YAML files as MCP Tools. By def
 
 ## Installation
 
-```bash
-pnpm install
-pnpm build
+### npx
+
+Claude Code:
+
+```shell-session
+$ claude mcp add any-script \
+  -s user \
+  -- npx any-script-mcp
+```
+
+json:
+
+```json
+{
+  "mcpServers": {
+     "any-script": {
+       "command": "npx",
+       "args": ["any-script-mcp"]
+     }
+  }
+}
 ```
 
 ## Configuration
 
-Place the configuration file at `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` (typically `~/.config/any-script-mcp/config.yaml`).
+Create a configuration file at `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` (typically `~/.config/any-script-mcp/config.yaml`).
 
 ### Example Configuration
 
@@ -31,17 +49,6 @@ tools:
         description: Message to echo
     run: |
       echo "Received: $INPUTS__MESSAGE"
-      
-  - name: list_files
-    description: List files in a directory
-    inputs:
-      path:
-        type: string
-        description: Directory path
-        required: false
-        default: "."
-    run: |
-      ls -la "$INPUTS__PATH"
       
   - name: git_status
     description: Check git status with optional branch
@@ -64,6 +71,21 @@ tools:
       else
         git status
       fi
+      
+  # Delegate search to codex CLI. Inspired by https://github.com/yoshiko-pg/o3-search-mcp
+  - name: codex-search
+    description: AI agent with web search for researching latest information, troubleshooting program errors, discussing complex problems and design decisions, exploring advanced library usage, and investigating upgrade paths. Supports natural language queries.
+    inputs:
+      prompt:
+        type: string
+        description: What you want to search, analyze, or discuss with the AI agent
+    run: |
+      codex exec \
+        --sandbox workspace-write \
+        --config "sandbox_workspace_write.network_access=true" \
+        "$INPUTS__PROMPT" \
+        --json \
+        | jq -sr 'map(select(.msg.type == "agent_message") | .msg.message) | last'
 ```
 
 ## Configuration Format
@@ -91,25 +113,6 @@ Input parameters are passed as environment variables to shell scripts. Variable 
 Examples:
 - `message` → `$INPUTS__MESSAGE`
 - `branch-name` → `$INPUTS__BRANCH_NAME`
-
-## Development
-
-```bash
-# Run tests
-pnpm test
-
-# Code formatting
-pnpm check
-
-# Build
-pnpm build
-```
-
-## Security
-
-- Parameters are passed via environment variables (command injection prevention)
-- Input name character restrictions
-- Timeout and output size limits (60 seconds, 10MB)
 
 ## License
 

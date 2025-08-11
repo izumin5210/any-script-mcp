@@ -8,14 +8,32 @@ YAMLファイルで定義したコマンドをMCP Toolとして公開できるMC
 
 ## インストール
 
-```bash
-pnpm install
-pnpm build
+### npx
+
+Claude Code:
+
+```shell-session
+$ claude mcp add any-script \
+  -s user \
+  -- npx any-script-mcp
+```
+
+json:
+
+```
+{
+  "mcpServers": {
+     "any-script": {
+       "command": "npx",
+       "args": ["any-script-mcp"]
+     }
+  }
+}
 ```
 
 ## 設定
 
-設定ファイルを `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` に配置します（通常は `~/.config/any-script-mcp/config.yaml`）。
+設定ファイルを `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` に作成します（通常は `~/.config/any-script-mcp/config.yaml`）。
 
 ### 設定ファイルの例
 
@@ -29,17 +47,6 @@ tools:
         description: Message to echo
     run: |
       echo "Received: $INPUTS__MESSAGE"
-      
-  - name: list_files
-    description: List files in a directory
-    inputs:
-      path:
-        type: string
-        description: Directory path
-        required: false
-        default: "."
-    run: |
-      ls -la "$INPUTS__PATH"
       
   - name: git_status
     description: Check git status with optional branch
@@ -62,6 +69,21 @@ tools:
       else
         git status
       fi
+      
+  # Delegate search to codex CLI. Inspired by https://github.com/yoshiko-pg/o3-search-mcp
+  - name: codex-search
+    description: AI agent with web search for researching latest information, troubleshooting program errors, discussing complex problems and design decisions, exploring advanced library usage, and investigating upgrade paths. Supports natural language queries.
+    inputs:
+      prompt:
+        type: string
+        description: What you want to search, analyze, or discuss with the AI agent
+    run: |
+      codex exec \
+        --sandbox workspace-write \
+        --config "sandbox_workspace_write.network_access=true" \
+        "$INPUTS__PROMPT" \
+        --json \
+        | jq -sr 'map(select(.msg.type == "agent_message") | .msg.message) | last'
 ```
 
 ## 設定フォーマット
@@ -89,19 +111,6 @@ tools:
 例：
 - `message` → `$INPUTS__MESSAGE`
 - `branch-name` → `$INPUTS__BRANCH_NAME`
-
-## 開発
-
-```bash
-# テスト実行
-pnpm test
-
-# コードフォーマット
-pnpm check
-
-# ビルド
-pnpm build
-```
 
 ## ライセンス
 
