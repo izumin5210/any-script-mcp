@@ -89,6 +89,7 @@ tools:
         description: What you want to search, analyze, or discuss with the AI agent
     run: |
       codex exec \
+        --model gpt-5 \
         --sandbox workspace-write \
         --config "sandbox_workspace_write.network_access=true" \
         "$INPUTS__PROMPT" \
