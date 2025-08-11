@@ -3,8 +3,32 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { loadConfig, type ToolConfig } from "./config.js";
+import { type ConfigError, loadConfig, type ToolConfig } from "./config.js";
 import { executeCommand } from "./executor.js";
+
+function printConfigError(error: ConfigError): void {
+  console.error("Configuration Error:\n");
+
+  switch (error.type) {
+    case "LOAD_ERROR":
+      console.error(`Failed to load config from: ${error.path}`);
+      console.error(`Error: ${error.message}`);
+      break;
+
+    case "VALIDATION_ERROR":
+      console.error(`Invalid configuration in: ${error.path}`);
+      console.error("\nValidation errors:");
+      error.issues.forEach((issue) => {
+        const path = issue.path.length > 0 ? issue.path.join(".") : "root";
+        console.error(`  - ${path}: ${issue.message}`);
+      });
+      break;
+  }
+
+  console.error(
+    "\nSee documentation at: https://github.com/izumin5210/any-script-mcp",
+  );
+}
 
 async function main() {
   const server = new McpServer({
@@ -13,13 +37,14 @@ async function main() {
   });
 
   // Load configuration file
-  let config: Awaited<ReturnType<typeof loadConfig>>;
-  try {
-    config = await loadConfig();
-  } catch (error) {
-    console.error("Failed to load config:", error);
+  const result = await loadConfig();
+
+  if (!result.ok) {
+    printConfigError(result.error);
     process.exit(1);
   }
+
+  const config = result.value;
 
   // Register each tool
   for (const tool of config.tools) {

@@ -38,12 +38,52 @@ export type ToolInput = z.infer<typeof ToolInputSchema>;
 export type ToolConfig = z.infer<typeof ToolConfigSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 
-export async function loadConfig(): Promise<Config> {
+// Error types
+export type ConfigError =
+  | { type: "LOAD_ERROR"; path: string; message: string }
+  | { type: "VALIDATION_ERROR"; path: string; issues: z.ZodIssue[] };
+
+// Result type
+export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
+
+export async function loadConfig(): Promise<Result<Config, ConfigError>> {
   // Use .config from home directory if xdgConfig is null
   const configDir = xdgConfig || path.join(homedir(), ".config");
   const configPath = path.join(configDir, "any-script-mcp", "config.yaml");
 
-  const content = await readFile(configPath, "utf-8");
-  const parsed = YAML.parse(content);
-  return ConfigSchema.parse(parsed);
+  // Try to load and parse the file
+  let parsed: unknown;
+  try {
+    const content = await readFile(configPath, "utf-8");
+    parsed = YAML.parse(content);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isNotFound =
+      error instanceof Error && "code" in error && error.code === "ENOENT";
+
+    return {
+      ok: false,
+      error: {
+        type: "LOAD_ERROR",
+        path: configPath,
+        message: isNotFound ? "Configuration file not found" : errorMessage,
+      },
+    };
+  }
+
+  // Validate with Zod using safeParse
+  const result = ConfigSchema.safeParse(parsed);
+
+  if (!result.success) {
+    return {
+      ok: false,
+      error: {
+        type: "VALIDATION_ERROR",
+        path: configPath,
+        issues: result.error.issues,
+      },
+    };
+  }
+
+  return { ok: true, value: result.data };
 }
