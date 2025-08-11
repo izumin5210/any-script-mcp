@@ -17,6 +17,8 @@ jobs:
             run: pnpm check
           - name: build
             run: pnpm build
+          - name: test
+            run: pnpm test
       fail-fast: false
 
     name: ${{ matrix.commands.name }}
