@@ -2,19 +2,27 @@
   "name": "any-scripts-mcp-server",
   "version": "0.0.0",
   "description": "",
-  "main": "out/index.js",
+  "main": "./out/index.js",
+  "bin": {
+    "any-scripts-mcp-server": "./out/index.ts"
+  },
+  "files": ["./out/"],
   "keywords": [],
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x ./out/index.js",
     "check": "biome check --write"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.4",
     "@types/node": "22.17.1",
     "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.2",
+    "zod": "^3.25.76"
   }
 }
