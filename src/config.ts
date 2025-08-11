@@ -41,11 +41,7 @@ export type Config = z.infer<typeof ConfigSchema>;
 export async function loadConfig(): Promise<Config> {
   // Use .config from home directory if xdgConfig is null
   const configDir = xdgConfig || path.join(homedir(), ".config");
-  const configPath = path.join(
-    configDir,
-    "any-script-mcp",
-    "config.yaml",
-  );
+  const configPath = path.join(configDir, "any-script-mcp", "config.yaml");
 
   const content = await readFile(configPath, "utf-8");
   const parsed = YAML.parse(content);
