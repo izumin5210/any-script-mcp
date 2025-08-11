@@ -1,14 +1,12 @@
 # any-script-mcp
 
-An MCP server that exposes arbitrary CLI tools and shell scripts as MCP Tools
+任意のCLIツールやシェルスクリプトをMCP Toolとして提供できるMCPサーバー
 
-[日本語版](./README.ja.md)
+## 概要
 
-## Overview
+YAMLファイルで定義したコマンドをMCP Toolとして公開できるMCPサーバーです。設定ファイルにツールの定義を記述することで、任意のシェルスクリプトをMCPクライアントから実行できるようになります。
 
-An MCP server that publishes commands defined in YAML files as MCP Tools. By defining tools in a configuration file, you can execute arbitrary shell scripts from MCP clients.
-
-## Installation
+## インストール
 
 ### npx
 
@@ -22,7 +20,7 @@ $ claude mcp add any-script \
 
 json:
 
-```json
+```
 {
   "mcpServers": {
      "any-script": {
@@ -33,21 +31,21 @@ json:
 }
 ```
 
-## Configuration
+## 設定
 
-Create a configuration file at `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` (typically `~/.config/any-script-mcp/config.yaml`).
+設定ファイルを `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` に作成します（通常は `~/.config/any-script-mcp/config.yaml`）。
 
-### Testing Your Configuration
+### 設定のテスト
 
-You can test your configuration using the MCP Inspector:
+MCP Inspectorを使って設定をテストできます：
 
 ```shell-session
 $ npx @modelcontextprotocol/inspector npx any-script-mcp
 ```
 
-This will open a web interface where you can see your registered tools and test them interactively.
+登録されたツールを確認し、対話的にテストできるWebインターフェースが開きます。
 
-### Example Configuration
+### 設定ファイルの例
 
 ```yaml
 tools:
@@ -99,32 +97,32 @@ tools:
         | jq -sr 'map(select(.msg.type == "agent_message") | .msg.message) | last'
 ```
 
-## Configuration Format
+## 設定フォーマット
 
-### Tool Definition
+### ツール定義
 
-Each tool has the following fields:
+各ツールは以下のフィールドを持ちます：
 
-- `name`: Tool name (alphanumeric, underscore, and hyphen only)
-- `description`: Tool description
-- `inputs`: Input parameter definitions (object format)
-- `run`: Shell script to execute
+- `name`: ツール名（英数字、アンダースコア、ハイフンのみ使用可能）
+- `description`: ツールの説明
+- `inputs`: 入力パラメータの定義（オブジェクト形式）
+- `run`: 実行するシェルスクリプト
 
-### Input Parameters
+### 入力パラメータ
 
-Each input parameter has the following fields:
+各入力パラメータは以下のフィールドを持ちます：
 
-- `type`: Parameter type (`string`, `number`, `boolean`)
-- `description`: Parameter description
-- `required`: Whether the parameter is required (default: `true`)
-- `default`: Default value (optional)
+- `type`: パラメータの型（`string`, `number`, `boolean`）
+- `description`: パラメータの説明
+- `required`: 必須かどうか（デフォルト: `true`）
+- `default`: デフォルト値（オプション）
 
-Input parameters are passed as environment variables to shell scripts. Variable names have the `INPUTS__` prefix and are converted to uppercase (hyphens are converted to underscores).
+入力パラメータはシェルスクリプトに環境変数として渡されます。変数名は `INPUTS__` プレフィックスが付き、大文字に変換されます（ハイフンはアンダースコアに変換）。
 
-Examples:
+例：
 - `message` → `$INPUTS__MESSAGE`
 - `branch-name` → `$INPUTS__BRANCH_NAME`
 
-## License
+## ライセンス
 
 MIT

@@ -1,20 +1,50 @@
 {
-  "name": "any-scripts-mcp-server",
+  "name": "any-script-mcp",
   "version": "0.0.0",
-  "description": "",
-  "main": "out/index.js",
-  "keywords": [],
+  "description": "MCP server that exposes arbitrary CLI tools and shell scripts as MCP Tools via YAML configuration",
+  "main": "./out/index.js",
+  "bin": {
+    "any-script-mcp": "./out/index.js"
+  },
+  "files": [
+    "./out/"
+  ],
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "modelcontextprotocol",
+    "model-context-protocol"
+  ],
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/izumin5210/any-script-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/izumin5210/any-script-mcp/issues"
+  },
+  "homepage": "https://github.com/izumin5210/any-script-mcp#readme",
   "type": "module",
   "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "build": "tsc",
-    "check": "biome check --write"
+    "build": "tsc && chmod +x ./out/index.js",
+    "check": "biome check --write",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.4",
     "@types/node": "22.17.1",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.2",
+    "execa": "^9.6.0",
+    "xdg-basedir": "^5.1.0",
+    "yaml": "^2.8.1",
+    "zod": "^3.25.76"
   }
 }
