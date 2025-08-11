@@ -4,7 +4,7 @@
   "description": "MCP server that exposes arbitrary CLI tools and shell scripts as MCP Tools via YAML configuration",
   "main": "./out/index.js",
   "bin": {
-    "any-script-mcp": "./out/index.ts"
+    "any-script-mcp": "./out/index.js"
   },
   "files": [
     "./out/"
@@ -13,11 +13,18 @@
     "mcp",
     "mcp-server",
     "modelcontextprotocol",
-    "model-context-protocol",
-    "tools"
+    "model-context-protocol"
   ],
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/izumin5210/any-script-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/izumin5210/any-script-mcp/issues"
+  },
+  "homepage": "https://github.com/izumin5210/any-script-mcp#readme",
   "type": "module",
   "packageManager": "pnpm@10.14.0",
   "scripts": {
