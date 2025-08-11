@@ -1,0 +1,20 @@
+{
+  "name": "any-scripts-mcp-server",
+  "version": "0.0.0",
+  "description": "",
+  "main": "out/index.js",
+  "keywords": [],
+  "author": "izumin5210 <m@izum.in>",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "build": "tsc",
+    "check": "biome check --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.1.4",
+    "@types/node": "22.17.1",
+    "typescript": "5.9.2"
+  }
+}

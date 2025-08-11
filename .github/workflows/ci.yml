@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    strategy:
+      matrix:
+        commands:
+          - name: check
+            run: pnpm check
+          - name: build
+            run: pnpm build
+      fail-fast: false
+
+    name: ${{ matrix.commands.name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.local/share/aquaproj-aqua
+          key: v2-aqua-installer-${{runner.os}}-${{runner.arch}}-${{hashFiles('aqua.yaml')}}
+          restore-keys: |
+            v2-aqua-installer-${{runner.os}}-${{runner.arch}}-
+      - uses: aquaproj/aqua-installer@d1fe50798dbadd4eb5b98957290ca175f6b4870f # v4.0.2
+        with:
+          aqua_version: v2.43.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+      - run: pnpm install
+      - name: Run `${{ matrix.commands.run }}`
+        run: |
+          ${{ matrix.commands.run }}
+      - name: check generated code is up to date
+        run: |
+          echo 'Check git diff to ensure `${{ matrix.commands.run }}` has been done in this commit.'
+          git diff --exit-code
