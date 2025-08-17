@@ -37,6 +37,25 @@ json:
 
 Create a configuration file at `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` (typically `~/.config/any-script-mcp/config.yaml`).
 
+You can also specify custom configuration file paths using the `ANY_SCRIPT_MCP_CONFIG` environment variable:
+
+```shell-session
+# Single configuration file
+$ ANY_SCRIPT_MCP_CONFIG=/path/to/custom/config.yaml npx any-script-mcp
+
+# Multiple configuration files (Unix/macOS - separated by colon)
+$ ANY_SCRIPT_MCP_CONFIG=/path/to/custom.yaml:$XDG_CONFIG_HOME/any-script-mcp/config.yaml npx any-script-mcp
+
+# Multiple configuration files (Windows - separated by semicolon)
+$ ANY_SCRIPT_MCP_CONFIG=C:\path\to\custom.yaml;%APPDATA%\any-script-mcp\config.yaml npx any-script-mcp
+```
+
+When multiple configuration files are specified:
+- All tools from all files are merged into a single collection
+- If the same tool name appears in multiple files, the first occurrence takes precedence
+- At least one valid configuration file must be successfully loaded
+- This is useful for separating common tools from project-specific or personal customizations
+
 ### Testing Your Configuration
 
 You can test your configuration using the MCP Inspector:
