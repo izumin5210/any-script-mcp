@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import YAML from "yaml";
 import { z } from "zod";
+import { loadConfig } from "./config";
 
 // Schema definitions (extracted from config.ts for testing)
 const INPUT_NAME_REGEX = /^[a-zA-Z0-9_-]+$/;
@@ -213,6 +217,256 @@ tools:
 `;
       const parsed = YAML.parse(yaml);
       expect(() => ConfigSchema.parse(parsed)).toThrow();
+    }
+  });
+});
+
+describe("loadConfig", () => {
+  let testDir: string;
+
+  beforeEach(async () => {
+    testDir = path.join(tmpdir(), "any-script-mcp-test", Date.now().toString());
+    await mkdir(testDir, { recursive: true });
+    vi.unstubAllEnvs();
+  });
+
+  afterEach(async () => {
+    await rm(testDir, { recursive: true, force: true });
+    vi.unstubAllEnvs();
+  });
+
+  it("should load config from environment variable when ANY_SCRIPT_MCP_CONFIG is set", async () => {
+    const configPath = path.join(testDir, "custom-config.yaml");
+    const configContent = `
+tools:
+  - name: custom_tool
+    description: Tool from custom config
+    inputs:
+      param:
+        type: string
+        description: A parameter
+    run: echo "$INPUTS__PARAM"
+`;
+    await writeFile(configPath, configContent);
+
+    vi.stubEnv("ANY_SCRIPT_MCP_CONFIG", configPath);
+
+    const result = await loadConfig();
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.tools).toHaveLength(1);
+      expect(result.value.tools[0].name).toBe("custom_tool");
+      expect(result.value.tools[0].description).toBe("Tool from custom config");
+    }
+  });
+
+  it("should return error when config file does not exist", async () => {
+    const nonExistentPath = path.join(testDir, "non-existent.yaml");
+    vi.stubEnv("ANY_SCRIPT_MCP_CONFIG", nonExistentPath);
+
+    const result = await loadConfig();
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.type).toBe("LOAD_ERROR");
+      expect(result.error.message).toBe("Configuration file not found");
+      expect(result.error.path).toBe(nonExistentPath);
+    }
+  });
+
+  it("should return validation error for invalid config", async () => {
+    const configPath = path.join(testDir, "invalid-config.yaml");
+    const invalidContent = `
+tools:
+  - name: "invalid-name!"
+    description: Invalid tool
+    run: echo test
+`;
+    await writeFile(configPath, invalidContent);
+
+    vi.stubEnv("ANY_SCRIPT_MCP_CONFIG", configPath);
+
+    const result = await loadConfig();
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.type).toBe("VALIDATION_ERROR");
+      expect(result.error.path).toBe(configPath);
+      expect(result.error.issues).toBeDefined();
+    }
+  });
+
+  it("should return error for malformed YAML", async () => {
+    const configPath = path.join(testDir, "malformed.yaml");
+    const malformedContent = `
+tools:
+  - name: test
+    description: [this is not valid
+`;
+    await writeFile(configPath, malformedContent);
+
+    vi.stubEnv("ANY_SCRIPT_MCP_CONFIG", configPath);
+
+    const result = await loadConfig();
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.type).toBe("LOAD_ERROR");
+      expect(result.error.path).toBe(configPath);
+    }
+  });
+
+  it("should load configs from multiple paths", async () => {
+    const config1Path = path.join(testDir, "config1.yaml");
+    const config2Path = path.join(testDir, "config2.yaml");
+
+    const config1Content = `
+tools:
+  - name: tool1
+    description: Tool from config1
+    run: echo "tool1"
+  - name: shared_tool
+    description: Shared tool from config1
+    run: echo "config1 version"
+`;
+    const config2Content = `
+tools:
+  - name: tool2
+    description: Tool from config2
+    run: echo "tool2"
+  - name: shared_tool
+    description: Shared tool from config2
+    run: echo "config2 version"
+`;
+
+    await writeFile(config1Path, config1Content);
+    await writeFile(config2Path, config2Content);
+
+    vi.stubEnv(
+      "ANY_SCRIPT_MCP_CONFIG",
+      `${config1Path}${path.delimiter}${config2Path}`,
+    );
+
+    const result = await loadConfig();
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.tools).toHaveLength(3);
+
+      const toolNames = result.value.tools.map((t) => t.name);
+      expect(toolNames).toContain("tool1");
+      expect(toolNames).toContain("tool2");
+      expect(toolNames).toContain("shared_tool");
+
+      // First config's shared_tool should be used
+      const sharedTool = result.value.tools.find(
+        (t) => t.name === "shared_tool",
+      );
+      expect(sharedTool?.description).toBe("Shared tool from config1");
+      expect(sharedTool?.run).toBe('echo "config1 version"');
+    }
+  });
+
+  it("should handle partial failures when loading multiple configs", async () => {
+    const validPath = path.join(testDir, "valid.yaml");
+    const nonExistentPath = path.join(testDir, "non-existent.yaml");
+    const invalidPath = path.join(testDir, "invalid.yaml");
+
+    const validContent = `
+tools:
+  - name: valid_tool
+    description: Valid tool
+    run: echo "valid"
+`;
+    const invalidContent = `
+tools:
+  - name: "invalid-name!"
+    description: Invalid tool
+    run: echo test
+`;
+
+    await writeFile(validPath, validContent);
+    await writeFile(invalidPath, invalidContent);
+
+    vi.stubEnv(
+      "ANY_SCRIPT_MCP_CONFIG",
+      `${nonExistentPath}${path.delimiter}${validPath}${path.delimiter}${invalidPath}`,
+    );
+
+    const result = await loadConfig();
+
+    // Should succeed because at least one config is valid
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.tools).toHaveLength(1);
+      expect(result.value.tools[0].name).toBe("valid_tool");
+    }
+  });
+
+  it("should handle empty path segments", async () => {
+    const configPath = path.join(testDir, "config.yaml");
+    const configContent = `
+tools:
+  - name: test_tool
+    description: Test tool
+    run: echo "test"
+`;
+    await writeFile(configPath, configContent);
+
+    // Include empty segments
+    vi.stubEnv(
+      "ANY_SCRIPT_MCP_CONFIG",
+      `${path.delimiter}${configPath}${path.delimiter}${path.delimiter}`,
+    );
+
+    const result = await loadConfig();
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.tools).toHaveLength(1);
+      expect(result.value.tools[0].name).toBe("test_tool");
+    }
+  });
+
+  it("should return MULTIPLE_ERRORS when all configs fail", async () => {
+    const invalid1Path = path.join(testDir, "invalid1.yaml");
+    const invalid2Path = path.join(testDir, "invalid2.yaml");
+
+    const invalid1Content = `
+tools:
+  - name: "invalid-name!"
+    description: Invalid tool
+    run: echo test
+`;
+    const invalid2Content = `
+tools:
+  - name: test
+    inputs:
+      "bad input!":
+        type: string
+        description: Bad
+    run: echo test
+`;
+
+    await writeFile(invalid1Path, invalid1Content);
+    await writeFile(invalid2Path, invalid2Content);
+
+    vi.stubEnv(
+      "ANY_SCRIPT_MCP_CONFIG",
+      `${invalid1Path}${path.delimiter}${invalid2Path}`,
+    );
+
+    const result = await loadConfig();
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.type).toBe("MULTIPLE_ERRORS");
+      if (result.error.type === "MULTIPLE_ERRORS") {
+        expect(result.error.errors).toHaveLength(2);
+        expect(result.error.errors[0].error.type).toBe("VALIDATION_ERROR");
+        expect(result.error.errors[1].error.type).toBe("VALIDATION_ERROR");
+      }
     }
   });
 });

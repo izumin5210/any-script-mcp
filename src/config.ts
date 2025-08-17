@@ -41,16 +41,19 @@ export type Config = z.infer<typeof ConfigSchema>;
 // Error types
 export type ConfigError =
   | { type: "LOAD_ERROR"; path: string; message: string }
-  | { type: "VALIDATION_ERROR"; path: string; issues: z.ZodIssue[] };
+  | { type: "VALIDATION_ERROR"; path: string; issues: z.ZodIssue[] }
+  | {
+      type: "MULTIPLE_ERRORS";
+      errors: Array<{ path: string; error: ConfigError }>;
+    };
 
 // Result type
 export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 
-export async function loadConfig(): Promise<Result<Config, ConfigError>> {
-  // Use .config from home directory if xdgConfig is null
-  const configDir = xdgConfig || path.join(homedir(), ".config");
-  const configPath = path.join(configDir, "any-script-mcp", "config.yaml");
-
+// Load a single config file
+async function loadSingleConfig(
+  configPath: string,
+): Promise<Result<Config, ConfigError>> {
   // Try to load and parse the file
   let parsed: unknown;
   try {
@@ -86,4 +89,70 @@ export async function loadConfig(): Promise<Result<Config, ConfigError>> {
   }
 
   return { ok: true, value: result.data };
+}
+
+function getDefaultConfigPath(): string {
+  const configDir = xdgConfig || path.join(homedir(), ".config");
+  return path.join(configDir, "any-script-mcp", "config.yaml");
+}
+
+function getConfigPaths(): ReadonlyArray<string> {
+  const configPathsStr =
+    process.env["ANY_SCRIPT_MCP_CONFIG"] ?? getDefaultConfigPath();
+  return configPathsStr.split(path.delimiter).filter((p) => p.length > 0);
+}
+
+export async function loadConfig(): Promise<Result<Config, ConfigError>> {
+  const configPaths = getConfigPaths()
+
+  // Load and merge configs
+  const allTools = new Map<string, ToolConfig>();
+  const errors: Array<{ path: string; error: ConfigError }> = [];
+
+  for (const configPath of configPaths) {
+    const result = await loadSingleConfig(configPath);
+
+    if (result.ok) {
+      // Add tools to map (don't overwrite existing tools)
+      for (const tool of result.value.tools) {
+        if (!allTools.has(tool.name)) {
+          allTools.set(tool.name, tool);
+        }
+      }
+    } else {
+      errors.push({ path: configPath, error: result.error });
+    }
+  }
+
+  // Return success if we have at least one tool
+  if (allTools.size > 0) {
+    return { ok: true, value: { tools: Array.from(allTools.values()) } };
+  }
+
+  // Return error if no tools were loaded
+  if (errors.length === 1) {
+    const firstError = errors[0];
+    if (firstError) {
+      return { ok: false, error: firstError.error };
+    }
+  } else if (errors.length > 1) {
+    return {
+      ok: false,
+      error: {
+        type: "MULTIPLE_ERRORS",
+        errors: errors,
+      },
+    };
+  }
+
+  // No config files specified and default doesn't exist
+  const firstPath = configPaths[0];
+  return {
+    ok: false,
+    error: {
+      type: "LOAD_ERROR",
+      path: firstPath || "unknown",
+      message: "No configuration files found",
+    },
+  };
 }

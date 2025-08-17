@@ -35,6 +35,25 @@ json:
 
 設定ファイルを `$XDG_CONFIG_HOME/any-script-mcp/config.yaml` に作成します（通常は `~/.config/any-script-mcp/config.yaml`）。
 
+`ANY_SCRIPT_MCP_CONFIG` 環境変数を使用してカスタム設定ファイルのパスを指定することもできます：
+
+```shell-session
+# 単一の設定ファイル
+$ ANY_SCRIPT_MCP_CONFIG=/path/to/custom/config.yaml npx any-script-mcp
+
+# 複数の設定ファイル（Unix/macOS - コロンで区切る）
+$ ANY_SCRIPT_MCP_CONFIG=/path/to/custom.yaml:$XDG_CONFIG_HOME/any-script-mcp/config.yaml npx any-script-mcp
+
+# 複数の設定ファイル（Windows - セミコロンで区切る）
+$ ANY_SCRIPT_MCP_CONFIG=C:\path\to\custom.yaml;%APPDATA%\any-script-mcp\config.yaml npx any-script-mcp
+```
+
+複数の設定ファイルを指定した場合：
+- すべてのファイルのツールが1つのコレクションにマージされます
+- 同じツール名が複数のファイルに存在する場合、最初に出現したものが優先されます
+- 少なくとも1つの有効な設定ファイルが正常に読み込まれる必要があります
+- 共通ツールとプロジェクト固有またはパーソナルカスタマイゼーションを分離するのに便利です
+
 ### 設定のテスト
 
 MCP Inspectorを使って設定をテストできます：
