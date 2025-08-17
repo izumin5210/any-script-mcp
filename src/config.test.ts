@@ -24,6 +24,7 @@ const ToolConfigSchema = z.object({
     .optional()
     .default({}),
   run: z.string(),
+  timeout: z.number().optional().default(300_000),
 });
 
 const ConfigSchema = z.object({
@@ -168,6 +169,37 @@ tools:
     expect(result.tools[0].inputs.str_with_default.default).toBe("hello");
     expect(result.tools[0].inputs.num_with_default.default).toBe(42);
     expect(result.tools[0].inputs.bool_with_default.default).toBe(true);
+  });
+
+  it("should handle timeout configuration", () => {
+    const yamlWithTimeout = `
+tools:
+  - name: with_timeout
+    description: Tool with custom timeout
+    inputs:
+      message:
+        type: string
+        description: Message
+    run: echo test
+    timeout: 120000
+`;
+    const parsed = YAML.parse(yamlWithTimeout);
+    const result = ConfigSchema.parse(parsed);
+
+    expect(result.tools[0].timeout).toBe(120000); // 2 minutes in ms
+  });
+
+  it("should use default timeout when not specified", () => {
+    const yamlWithoutTimeout = `
+tools:
+  - name: without_timeout
+    description: Tool without custom timeout
+    run: echo test
+`;
+    const parsed = YAML.parse(yamlWithoutTimeout);
+    const result = ConfigSchema.parse(parsed);
+
+    expect(result.tools[0].timeout).toBe(300_000); // Default 5 minutes
   });
 
   it("should validate input name patterns", () => {

@@ -116,6 +116,14 @@ tools:
         "$INPUTS__PROMPT" \
         --json \
         | jq -sr 'map(select(.msg.type == "agent_message") | .msg.message) | last'
+    timeout: 600000  # 10 minutes for complex AI operations
+      
+  - name: build
+    description: Run build process with tests
+    run: |
+      npm run build
+      npm test
+    timeout: 180000  # 3 minutes for build and test
 ```
 
 ## Configuration Format
@@ -128,6 +136,7 @@ Each tool has the following fields:
 - `description`: Tool description
 - `inputs`: Input parameter definitions (object format)
 - `run`: Shell script to execute
+- `timeout`: Execution timeout in milliseconds (optional, default: 300000 = 5 minutes)
 
 ### Input Parameters
 

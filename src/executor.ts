@@ -33,7 +33,7 @@ ${config.run}`;
     const result = await execa(tmpFile, {
       env: { ...process.env, ...env },
       shell: false,
-      timeout: 60_000,
+      timeout: config.timeout ?? 300_000, // Use configured timeout or default to 5 minutes
       maxBuffer: 10 * 1024 * 1024,
     });
 
