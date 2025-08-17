@@ -114,6 +114,14 @@ tools:
         "$INPUTS__PROMPT" \
         --json \
         | jq -sr 'map(select(.msg.type == "agent_message") | .msg.message) | last'
+    timeout: 600000  # 複雑なAI処理のため10分
+      
+  - name: build
+    description: ビルドプロセスとテストの実行
+    run: |
+      npm run build
+      npm test
+    timeout: 180000  # ビルドとテストのため3分
 ```
 
 ## 設定フォーマット
@@ -126,6 +134,7 @@ tools:
 - `description`: ツールの説明
 - `inputs`: 入力パラメータの定義（オブジェクト形式）
 - `run`: 実行するシェルスクリプト
+- `timeout`: 実行タイムアウト（ミリ秒単位、オプション、デフォルト: 300000 = 5分）
 
 ### 入力パラメータ
 

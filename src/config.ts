@@ -28,6 +28,7 @@ const ToolConfigSchema = z.object({
     .optional()
     .default({}),
   run: z.string(),
+  timeout: z.number().optional().default(300_000), // 5 minutes in milliseconds
 });
 
 const ConfigSchema = z.object({

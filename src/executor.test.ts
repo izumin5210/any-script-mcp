@@ -113,4 +113,42 @@ echo "Line 3"`,
     expect(lines[1]).toBe("Welcome to the test");
     expect(lines[2]).toBe("Line 3");
   });
+
+  it("should use custom timeout when specified", async () => {
+    const config = {
+      name: "timeout_test",
+      description: "Test custom timeout",
+      inputs: {},
+      run: 'sleep 2 && echo "Should timeout"',
+      timeout: 100, // 100ms timeout, should fail
+    };
+
+    await expect(executeCommand(config, {})).rejects.toThrow();
+  });
+
+  it("should succeed with longer timeout", async () => {
+    const config = {
+      name: "timeout_success_test",
+      description: "Test successful execution with timeout",
+      inputs: {},
+      run: 'echo "Quick execution"',
+      timeout: 60_000, // 1 minute timeout
+    };
+
+    const result = await executeCommand(config, {});
+    expect(result.trim()).toBe("Quick execution");
+  });
+
+  it("should use default timeout when not specified", async () => {
+    const config = {
+      name: "default_timeout_test",
+      description: "Test default timeout",
+      inputs: {},
+      run: 'echo "Default timeout"',
+      // No timeout specified, should use default (5 minutes)
+    };
+
+    const result = await executeCommand(config, {});
+    expect(result.trim()).toBe("Default timeout");
+  });
 });
