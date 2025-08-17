@@ -103,7 +103,7 @@ function getConfigPaths(): ReadonlyArray<string> {
 }
 
 export async function loadConfig(): Promise<Result<Config, ConfigError>> {
-  const configPaths = getConfigPaths()
+  const configPaths = getConfigPaths();
 
   // Load and merge configs
   const allTools = new Map<string, ToolConfig>();
