@@ -1,3 +1,5 @@
+[![MSeeP.ai Security Assessment Badge](https://mseep.net/pr/izumin5210-any-script-mcp-badge.png)](https://mseep.ai/app/izumin5210-any-script-mcp)
+
 # any-script-mcp
 
 An MCP server that exposes arbitrary CLI tools and shell scripts as MCP Tools
