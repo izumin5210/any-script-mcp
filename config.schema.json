@@ -29,11 +29,7 @@
                   "properties": {
                     "type": {
                       "type": "string",
-                      "enum": [
-                        "string",
-                        "number",
-                        "boolean"
-                      ],
+                      "enum": ["string", "number", "boolean"],
                       "description": "Data type of the input parameter"
                     },
                     "description": {
@@ -49,10 +45,7 @@
                       "description": "Default value if the input is not provided"
                     }
                   },
-                  "required": [
-                    "type",
-                    "description"
-                  ],
+                  "required": ["type", "description"],
                   "additionalProperties": false,
                   "description": "Input parameter definition for a tool"
                 },
@@ -72,20 +65,14 @@
                 "description": "Maximum execution time in milliseconds. Defaults to 300000 (5 minutes)"
               }
             },
-            "required": [
-              "name",
-              "description",
-              "run"
-            ],
+            "required": ["name", "description", "run"],
             "additionalProperties": false,
             "description": "Configuration for a single tool"
           },
           "description": "List of tools to expose via MCP"
         }
       },
-      "required": [
-        "tools"
-      ],
+      "required": ["tools"],
       "additionalProperties": false,
       "description": "Root configuration schema for any-script-mcp"
     }

@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsc && chmod +x ./out/index.js",
     "check": "biome check --write",
-    "gen:schema": "node --experimental-strip-types scripts/generate-schema.ts",
+    "gen:schema": "node --experimental-strip-types scripts/generate-schema.ts && biome check --write config.schema.json",
     "test": "vitest",
     "test:run": "vitest run",
     "test:watch": "vitest --watch"
