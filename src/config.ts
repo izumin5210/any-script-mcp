@@ -13,7 +13,7 @@ export const ToolInputSchema = z
     type: z
       .enum(["string", "number", "boolean"])
       .describe("Data type of the input parameter"),
-    description: z.string().describe("Human-readable description of the input parameter"),
+    description: z.string().describe("Clear description for AI to understand the parameter's purpose and expected values"),
     required: z
       .boolean()
       .optional()
@@ -31,7 +31,7 @@ export const ToolConfigSchema = z
       .describe("Unique identifier for the tool. Must contain only alphanumeric characters, underscores, and hyphens"),
     description: z
       .string()
-      .describe("Human-readable description of what the tool does"),
+      .describe("Comprehensive description for AI to understand when and how to use this tool"),
     inputs: z
       .record(
         z

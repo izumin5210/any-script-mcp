@@ -20,7 +20,7 @@
               },
               "description": {
                 "type": "string",
-                "description": "Human-readable description of what the tool does"
+                "description": "Comprehensive description for AI to understand when and how to use this tool"
               },
               "inputs": {
                 "type": "object",
@@ -38,7 +38,7 @@
                     },
                     "description": {
                       "type": "string",
-                      "description": "Human-readable description of the input parameter"
+                      "description": "Clear description for AI to understand the parameter's purpose and expected values"
                     },
                     "required": {
                       "type": "boolean",
