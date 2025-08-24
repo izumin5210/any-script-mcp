@@ -139,6 +139,7 @@ Each tool has the following fields:
 - `description`: Tool description
 - `inputs`: Input parameter definitions (object format)
 - `run`: Shell script to execute
+- `shell`: Shell command to execute the script (optional, default: `"bash -e {0}"`)
 - `timeout`: Execution timeout in milliseconds (optional, default: 300000 = 5 minutes)
 
 ### Input Parameters
@@ -155,6 +156,96 @@ Input parameters are passed as environment variables to shell scripts. Variable 
 Examples:
 - `message` → `$INPUTS__MESSAGE`
 - `branch-name` → `$INPUTS__BRANCH_NAME`
+
+### Shell Option
+
+The `shell` option allows you to specify a custom shell or interpreter for executing scripts. The `{0}` placeholder is replaced with the path to the temporary script file.
+
+Default: `"bash -e {0}"`
+
+Examples:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
+tools:
+  # Python script
+  - name: python_analysis
+    description: Analyze data with Python
+    shell: "python {0}"
+    inputs:
+      data:
+        type: string
+        description: Data to analyze
+    run: |
+      import os
+      import json
+      
+      data = os.environ['INPUTS__DATA']
+      # Process data with Python
+      result = {"analysis": f"Processed: {data}"}
+      print(json.dumps(result))
+
+  # Deno script
+  - name: deno_fetch
+    description: Fetch data with Deno
+    shell: "deno run --allow-net {0}"
+    inputs:
+      endpoint:
+        type: string
+        description: API endpoint
+    run: |
+      const endpoint = Deno.env.get("INPUTS__ENDPOINT");
+      const response = await fetch(endpoint);
+      console.log(await response.json());
+```
+
+#### Advanced Examples - AI Agents with Web Search
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
+tools:
+  - name: gemini-search
+    description: AI agent with web search using Gemini 2.5 Flash
+    shell: "deno run -N -E {0}"
+    inputs:
+      input:
+        type: string
+        description: Query for AI search
+        required: true
+    run: |
+      import { GoogleGenAI } from "npm:@google/genai@^1";
+      const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINI_API_KEY") });
+      const res = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: Deno.env.get("INPUTS__INPUT")!,
+        config: {
+          tools: [{ googleSearch: {} }],
+          systemInstruction: "...",
+        },
+      });
+      console.log(
+        res.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join(""),
+      );
+
+  - name: gpt-5-search
+    description: AI agent with web search using GPT-5
+    shell: "deno run -N -E {0}"
+    inputs:
+      input:
+        type: string
+        description: Query for AI search
+        required: true
+    run: |
+      import OpenAI from "jsr:@openai/openai";
+      const client = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+      const res = await client.responses.create({
+        model: "gpt-5",
+        tools: [{ type: "web_search_preview" }],
+        input: Deno.env.get("INPUTS__INPUT"),
+        instructions: "...",
+      });
+      console.log(res.output_text);
+```
 
 ## License
 

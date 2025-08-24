@@ -67,6 +67,7 @@ $ npx @modelcontextprotocol/inspector npx any-script-mcp
 ### 設定ファイルの例
 
 ```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
 tools:
   - name: echo
     description: Echo a message
@@ -134,6 +135,7 @@ tools:
 - `description`: ツールの説明
 - `inputs`: 入力パラメータの定義（オブジェクト形式）
 - `run`: 実行するシェルスクリプト
+- `shell`: スクリプトを実行するシェルコマンド（オプション、デフォルト: `"bash -e {0}"`）
 - `timeout`: 実行タイムアウト（ミリ秒単位、オプション、デフォルト: 300000 = 5分）
 
 ### 入力パラメータ
@@ -150,6 +152,96 @@ tools:
 例：
 - `message` → `$INPUTS__MESSAGE`
 - `branch-name` → `$INPUTS__BRANCH_NAME`
+
+### Shellオプション
+
+`shell` オプションを使用すると、スクリプトを実行するためのカスタムシェルまたはインタープリタを指定できます。`{0}` プレースホルダーは一時スクリプトファイルのパスに置き換えられます。
+
+デフォルト: `"bash -e {0}"`
+
+例：
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
+tools:
+  # Pythonスクリプト
+  - name: python_analysis
+    description: Pythonでデータ分析
+    shell: "python {0}"
+    inputs:
+      data:
+        type: string
+        description: 分析するデータ
+    run: |
+      import os
+      import json
+      
+      data = os.environ['INPUTS__DATA']
+      # Pythonでデータを処理
+      result = {"analysis": f"Processed: {data}"}
+      print(json.dumps(result))
+
+  # Denoスクリプト
+  - name: deno_fetch
+    description: Denoでデータを取得
+    shell: "deno run --allow-net {0}"
+    inputs:
+      endpoint:
+        type: string
+        description: APIエンドポイント
+    run: |
+      const endpoint = Deno.env.get("INPUTS__ENDPOINT");
+      const response = await fetch(endpoint);
+      console.log(await response.json());
+```
+
+#### 高度な例 - AIエージェントとWeb検索
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
+tools:
+  - name: gemini-search
+    description: Gemini 2.5 FlashとWeb検索を使用したAIエージェント
+    shell: "deno run -N -E {0}"
+    inputs:
+      input:
+        type: string
+        description: AI検索のクエリ
+        required: true
+    run: |
+      import { GoogleGenAI } from "npm:@google/genai@^1";
+      const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINI_API_KEY") });
+      const res = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: Deno.env.get("INPUTS__INPUT")!,
+        config: {
+          tools: [{ googleSearch: {} }],
+          systemInstruction: "...",
+        },
+      });
+      console.log(
+        res.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join(""),
+      );
+
+  - name: gpt-5-search
+    description: GPT-5とWeb検索を使用したAIエージェント
+    shell: "deno run -N -E {0}"
+    inputs:
+      input:
+        type: string
+        description: AI検索のクエリ
+        required: true
+    run: |
+      import OpenAI from "jsr:@openai/openai";
+      const client = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+      const res = await client.responses.create({
+        model: "gpt-5",
+        tools: [{ type: "web_search_preview" }],
+        input: Deno.env.get("INPUTS__INPUT"),
+        instructions: "...",
+      });
+      console.log(res.output_text);
+```
 
 ## ライセンス
 

@@ -59,6 +59,11 @@
                 "type": "string",
                 "description": "Shell script to execute when the tool is invoked"
               },
+              "shell": {
+                "type": "string",
+                "default": "bash -e {0}",
+                "description": "Shell command to execute the script. '{0}' will be replaced with the script file path. Defaults to 'bash -e {0}'. Examples: 'python {0}', 'node {0}', 'deno run {0}'"
+              },
               "timeout": {
                 "type": "number",
                 "default": 300000,

@@ -8,17 +8,12 @@ export async function executeCommand(
   config: ToolConfig,
   inputs: Record<string, unknown>,
 ): Promise<string> {
-  // Add script header
-  const fullScript = `#!/usr/bin/env bash
-set -euo pipefail
-${config.run}`;
-
   // Write to temporary file
   const tmpFile = path.join(
     tmpdir(),
-    `script-${Date.now()}-${Math.random().toString(36).slice(2)}.sh`,
+    `script-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
-  await writeFile(tmpFile, fullScript, { mode: 0o700 });
+  await writeFile(tmpFile, config.run, { mode: 0o700 });
 
   try {
     // Prepare environment variables (with INPUTS__ prefix)
@@ -29,10 +24,13 @@ ${config.run}`;
       env[envKey] = String(value);
     }
 
+    // Replace all {0} placeholders with the script file path
+    const command = config.shell.replaceAll("{0}", tmpFile);
+
     // Execute with execa
-    const result = await execa(tmpFile, {
+    const result = await execa(command, {
       env: { ...process.env, ...env },
-      shell: false,
+      shell: true,
       timeout: config.timeout,
       maxBuffer: 10 * 1024 * 1024,
     });

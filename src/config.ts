@@ -58,6 +58,13 @@ export const ToolConfigSchema = z
     run: z
       .string()
       .describe("Shell script to execute when the tool is invoked"),
+    shell: z
+      .string()
+      .optional()
+      .default("bash -e {0}")
+      .describe(
+        "Shell command to execute the script. '{0}' will be replaced with the script file path. Defaults to 'bash -e {0}'. Examples: 'python {0}', 'node {0}', 'deno run {0}'",
+      ),
     timeout: z
       .number()
       .optional()
