@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -24,6 +24,6 @@ const schemaWithMetadata = {
 
 // Write to file
 const outputPath = `${__dirname}/../config.schema.json`;
-await writeFile(outputPath, JSON.stringify(schemaWithMetadata, null, 2) + "\n");
+await writeFile(outputPath, `${JSON.stringify(schemaWithMetadata, null, 2)}\n`);
 
 console.log(`✅ Schema generated at: config.schema.json`);

@@ -13,13 +13,20 @@ export const ToolInputSchema = z
     type: z
       .enum(["string", "number", "boolean"])
       .describe("Data type of the input parameter"),
-    description: z.string().describe("Clear description for AI to understand the parameter's purpose and expected values"),
+    description: z
+      .string()
+      .describe(
+        "Clear description for AI to understand the parameter's purpose and expected values",
+      ),
     required: z
       .boolean()
       .optional()
       .default(true)
       .describe("Whether this input parameter is required. Defaults to true"),
-    default: z.any().optional().describe("Default value if the input is not provided"),
+    default: z
+      .any()
+      .optional()
+      .describe("Default value if the input is not provided"),
   })
   .describe("Input parameter definition for a tool");
 
@@ -28,10 +35,14 @@ export const ToolConfigSchema = z
     name: z
       .string()
       .regex(/^[a-zA-Z0-9_-]+$/)
-      .describe("Unique identifier for the tool. Must contain only alphanumeric characters, underscores, and hyphens"),
+      .describe(
+        "Unique identifier for the tool. Must contain only alphanumeric characters, underscores, and hyphens",
+      ),
     description: z
       .string()
-      .describe("Comprehensive description for AI to understand when and how to use this tool"),
+      .describe(
+        "Comprehensive description for AI to understand when and how to use this tool",
+      ),
     inputs: z
       .record(
         z
@@ -41,19 +52,27 @@ export const ToolConfigSchema = z
       )
       .optional()
       .default({})
-      .describe("Input parameters for the tool. Keys must contain only alphanumeric characters, underscores, and hyphens"),
-    run: z.string().describe("Shell script to execute when the tool is invoked"),
+      .describe(
+        "Input parameters for the tool. Keys must contain only alphanumeric characters, underscores, and hyphens",
+      ),
+    run: z
+      .string()
+      .describe("Shell script to execute when the tool is invoked"),
     timeout: z
       .number()
       .optional()
       .default(300_000) // 5 minutes in milliseconds
-      .describe("Maximum execution time in milliseconds. Defaults to 300000 (5 minutes)"),
+      .describe(
+        "Maximum execution time in milliseconds. Defaults to 300000 (5 minutes)",
+      ),
   })
   .describe("Configuration for a single tool");
 
 export const ConfigSchema = z
   .object({
-    tools: z.array(ToolConfigSchema).describe("List of tools to expose via MCP"),
+    tools: z
+      .array(ToolConfigSchema)
+      .describe("List of tools to expose via MCP"),
   })
   .describe("Root configuration schema for any-script-mcp");
 
