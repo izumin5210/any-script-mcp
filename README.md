@@ -223,6 +223,53 @@ tools:
       puts "Processed: #{text.upcase}"
 ```
 
+#### Advanced Examples - AI Agents with Web Search
+
+```yaml
+tools:
+  # Gemini AI search
+  - name: gemini-search
+    description: AI agent with web search using Gemini 2.5 Flash
+    shell: "deno run -N -E {0}"
+    inputs:
+      input:
+        type: string
+        description: Query for AI search
+        required: true
+    run: |
+      import { GoogleGenAI } from "@google/generative-ai";
+      
+      const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINIbbb_API_KEY") });
+      const res = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: Deno.env.get("INPUTS__INPUT"),
+        config: {
+          tools: [{ googleSearch: {} }],
+        },
+      });
+      console.log(ca?.content?.parts?.map((p) => p.text ?? ""));
+
+  # GPT-5 AI search
+  - name: gpt-5-search
+    description: AI agent with web search using GPT-5
+    shell: "deno run -N -E {0}"
+    inputs:
+      input:
+        type: string
+        description: Query for AI search
+        required: true
+    run: |
+      import OpenAI from "jsr:@openai/openai";
+      
+      const client = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+      const res = await client.responses.create({
+        model: "gpt-5",
+        tools: [{ type: "web_search_preview" }],
+        input: Deno.env.get("INPUTS__INPUT"),
+      });
+      console.log(res.output_text);
+```
+
 ## License
 
 MIT
