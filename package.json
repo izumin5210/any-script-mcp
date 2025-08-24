@@ -30,6 +30,7 @@
   "scripts": {
     "build": "tsc && chmod +x ./out/index.js",
     "check": "biome check --write",
+    "gen:schema": "node --experimental-strip-types scripts/generate-schema.ts && biome check --write config.schema.json",
     "test": "vitest",
     "test:run": "vitest run",
     "test:watch": "vitest --watch"
@@ -38,7 +39,8 @@
     "@biomejs/biome": "2.1.4",
     "@types/node": "22.17.1",
     "typescript": "5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod-to-json-schema": "^3.24.6"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.2",

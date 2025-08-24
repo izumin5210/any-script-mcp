@@ -8,32 +8,73 @@ import { z } from "zod";
 // Input name constraint (alphanumeric, underscore, and hyphen only)
 const INPUT_NAME_REGEX = /^[a-zA-Z0-9_-]+$/;
 
-const ToolInputSchema = z.object({
-  type: z.enum(["string", "number", "boolean"]),
-  description: z.string(),
-  required: z.boolean().optional().default(true),
-  default: z.any().optional(),
-});
+export const ToolInputSchema = z
+  .object({
+    type: z
+      .enum(["string", "number", "boolean"])
+      .describe("Data type of the input parameter"),
+    description: z
+      .string()
+      .describe(
+        "Clear description for AI to understand the parameter's purpose and expected values",
+      ),
+    required: z
+      .boolean()
+      .optional()
+      .default(true)
+      .describe("Whether this input parameter is required. Defaults to true"),
+    default: z
+      .any()
+      .optional()
+      .describe("Default value if the input is not provided"),
+  })
+  .describe("Input parameter definition for a tool");
 
-const ToolConfigSchema = z.object({
-  name: z.string().regex(/^[a-zA-Z0-9_-]+$/),
-  description: z.string(),
-  inputs: z
-    .record(
-      z
-        .string()
-        .regex(INPUT_NAME_REGEX), // Key constraint
-      ToolInputSchema,
-    )
-    .optional()
-    .default({}),
-  run: z.string(),
-  timeout: z.number().optional().default(300_000), // 5 minutes in milliseconds
-});
+export const ToolConfigSchema = z
+  .object({
+    name: z
+      .string()
+      .regex(/^[a-zA-Z0-9_-]+$/)
+      .describe(
+        "Unique identifier for the tool. Must contain only alphanumeric characters, underscores, and hyphens",
+      ),
+    description: z
+      .string()
+      .describe(
+        "Comprehensive description for AI to understand when and how to use this tool",
+      ),
+    inputs: z
+      .record(
+        z
+          .string()
+          .regex(INPUT_NAME_REGEX), // Key constraint
+        ToolInputSchema,
+      )
+      .optional()
+      .default({})
+      .describe(
+        "Input parameters for the tool. Keys must contain only alphanumeric characters, underscores, and hyphens",
+      ),
+    run: z
+      .string()
+      .describe("Shell script to execute when the tool is invoked"),
+    timeout: z
+      .number()
+      .optional()
+      .default(300_000) // 5 minutes in milliseconds
+      .describe(
+        "Maximum execution time in milliseconds. Defaults to 300000 (5 minutes)",
+      ),
+  })
+  .describe("Configuration for a single tool");
 
-const ConfigSchema = z.object({
-  tools: z.array(ToolConfigSchema),
-});
+export const ConfigSchema = z
+  .object({
+    tools: z
+      .array(ToolConfigSchema)
+      .describe("List of tools to expose via MCP"),
+  })
+  .describe("Root configuration schema for any-script-mcp");
 
 export type ToolInput = z.infer<typeof ToolInputSchema>;
 export type ToolConfig = z.infer<typeof ToolConfigSchema>;

@@ -71,6 +71,7 @@ This will open a web interface where you can see your registered tools and test 
 ### Example Configuration
 
 ```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
 tools:
   - name: echo
     description: Echo a message
