@@ -166,6 +166,7 @@ Default: `"bash -e {0}"`
 Examples:
 
 ```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
 tools:
   # Python script
   - name: python_analysis
@@ -184,19 +185,6 @@ tools:
       result = {"analysis": f"Processed: {data}"}
       print(json.dumps(result))
 
-  # Node.js script
-  - name: node_server_check
-    description: Check server status with Node.js
-    shell: "node {0}"
-    inputs:
-      url:
-        type: string
-        description: Server URL
-    run: |
-      const url = process.env.INPUTS__URL;
-      console.log(`Checking server: ${url}`);
-      // Server check logic here
-
   # Deno script
   - name: deno_fetch
     description: Fetch data with Deno
@@ -209,25 +197,13 @@ tools:
       const endpoint = Deno.env.get("INPUTS__ENDPOINT");
       const response = await fetch(endpoint);
       console.log(await response.json());
-
-  # Custom shell command
-  - name: ruby_processor
-    description: Process with Ruby
-    shell: "ruby {0}"
-    inputs:
-      text:
-        type: string
-        description: Text to process
-    run: |
-      text = ENV['INPUTS__TEXT']
-      puts "Processed: #{text.upcase}"
 ```
 
 #### Advanced Examples - AI Agents with Web Search
 
 ```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
 tools:
-  # Gemini AI search
   - name: gemini-search
     description: AI agent with web search using Gemini 2.5 Flash
     shell: "deno run -N -E {0}"
@@ -237,19 +213,20 @@ tools:
         description: Query for AI search
         required: true
     run: |
-      import { GoogleGenAI } from "@google/generative-ai";
-      
-      const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINIbbb_API_KEY") });
+      import { GoogleGenAI } from "npm:@google/genai@^1";
+      const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINI_API_KEY") });
       const res = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: Deno.env.get("INPUTS__INPUT"),
+        contents: Deno.env.get("INPUTS__INPUT")!,
         config: {
           tools: [{ googleSearch: {} }],
+          systemInstruction: "...",
         },
       });
-      console.log(ca?.content?.parts?.map((p) => p.text ?? ""));
+      console.log(
+        res.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join(""),
+      );
 
-  # GPT-5 AI search
   - name: gpt-5-search
     description: AI agent with web search using GPT-5
     shell: "deno run -N -E {0}"
@@ -260,12 +237,12 @@ tools:
         required: true
     run: |
       import OpenAI from "jsr:@openai/openai";
-      
       const client = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
       const res = await client.responses.create({
         model: "gpt-5",
         tools: [{ type: "web_search_preview" }],
         input: Deno.env.get("INPUTS__INPUT"),
+        instructions: "...",
       });
       console.log(res.output_text);
 ```
