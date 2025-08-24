@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json",
+  "title": "Any Script MCP Configuration",
+  "description": "Configuration schema for any-script-mcp - MCP server that exposes arbitrary CLI tools and shell scripts as MCP Tools via YAML configuration",
+  "$ref": "#/definitions/AnyScriptMCPConfig",
+  "definitions": {
+    "AnyScriptMCPConfig": {
+      "type": "object",
+      "properties": {
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              "description": {
+                "type": "string"
+              },
+              "inputs": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["string", "number", "boolean"]
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "required": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "default": {}
+                  },
+                  "required": ["type", "description"],
+                  "additionalProperties": false
+                },
+                "propertyNames": {
+                  "pattern": "^[a-zA-Z0-9_-]+$"
+                },
+                "default": {}
+              },
+              "run": {
+                "type": "string"
+              },
+              "timeout": {
+                "type": "number",
+                "default": 300000
+              }
+            },
+            "required": ["name", "description", "run"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["tools"],
+      "additionalProperties": false
+    }
+  }
+}

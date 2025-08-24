@@ -8,14 +8,14 @@ import { z } from "zod";
 // Input name constraint (alphanumeric, underscore, and hyphen only)
 const INPUT_NAME_REGEX = /^[a-zA-Z0-9_-]+$/;
 
-const ToolInputSchema = z.object({
+export const ToolInputSchema = z.object({
   type: z.enum(["string", "number", "boolean"]),
   description: z.string(),
   required: z.boolean().optional().default(true),
   default: z.any().optional(),
 });
 
-const ToolConfigSchema = z.object({
+export const ToolConfigSchema = z.object({
   name: z.string().regex(/^[a-zA-Z0-9_-]+$/),
   description: z.string(),
   inputs: z
@@ -31,7 +31,7 @@ const ToolConfigSchema = z.object({
   timeout: z.number().optional().default(300_000), // 5 minutes in milliseconds
 });
 
-const ConfigSchema = z.object({
+export const ConfigSchema = z.object({
   tools: z.array(ToolConfigSchema),
 });
 
