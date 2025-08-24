@@ -139,6 +139,7 @@ Each tool has the following fields:
 - `description`: Tool description
 - `inputs`: Input parameter definitions (object format)
 - `run`: Shell script to execute
+- `shell`: Shell command to execute the script (optional, default: `"bash -e {0}"`)
 - `timeout`: Execution timeout in milliseconds (optional, default: 300000 = 5 minutes)
 
 ### Input Parameters
@@ -155,6 +156,72 @@ Input parameters are passed as environment variables to shell scripts. Variable 
 Examples:
 - `message` → `$INPUTS__MESSAGE`
 - `branch-name` → `$INPUTS__BRANCH_NAME`
+
+### Shell Option
+
+The `shell` option allows you to specify a custom shell or interpreter for executing scripts. The `{0}` placeholder is replaced with the path to the temporary script file.
+
+Default: `"bash -e {0}"`
+
+Examples:
+
+```yaml
+tools:
+  # Python script
+  - name: python_analysis
+    description: Analyze data with Python
+    shell: "python {0}"
+    inputs:
+      data:
+        type: string
+        description: Data to analyze
+    run: |
+      import os
+      import json
+      
+      data = os.environ['INPUTS__DATA']
+      # Process data with Python
+      result = {"analysis": f"Processed: {data}"}
+      print(json.dumps(result))
+
+  # Node.js script
+  - name: node_server_check
+    description: Check server status with Node.js
+    shell: "node {0}"
+    inputs:
+      url:
+        type: string
+        description: Server URL
+    run: |
+      const url = process.env.INPUTS__URL;
+      console.log(`Checking server: ${url}`);
+      // Server check logic here
+
+  # Deno script
+  - name: deno_fetch
+    description: Fetch data with Deno
+    shell: "deno run --allow-net {0}"
+    inputs:
+      endpoint:
+        type: string
+        description: API endpoint
+    run: |
+      const endpoint = Deno.env.get("INPUTS__ENDPOINT");
+      const response = await fetch(endpoint);
+      console.log(await response.json());
+
+  # Custom shell command
+  - name: ruby_processor
+    description: Process with Ruby
+    shell: "ruby {0}"
+    inputs:
+      text:
+        type: string
+        description: Text to process
+    run: |
+      text = ENV['INPUTS__TEXT']
+      puts "Processed: #{text.upcase}"
+```
 
 ## License
 
