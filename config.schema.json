@@ -15,10 +15,12 @@
             "properties": {
               "name": {
                 "type": "string",
-                "pattern": "^[a-zA-Z0-9_-]+$"
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "description": "Unique identifier for the tool. Must contain only alphanumeric characters, underscores, and hyphens"
               },
               "description": {
-                "type": "string"
+                "type": "string",
+                "description": "Human-readable description of what the tool does"
               },
               "inputs": {
                 "type": "object",
@@ -27,40 +29,65 @@
                   "properties": {
                     "type": {
                       "type": "string",
-                      "enum": ["string", "number", "boolean"]
+                      "enum": [
+                        "string",
+                        "number",
+                        "boolean"
+                      ],
+                      "description": "Data type of the input parameter"
                     },
                     "description": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Human-readable description of the input parameter"
                     },
                     "required": {
                       "type": "boolean",
-                      "default": true
+                      "default": true,
+                      "description": "Whether this input parameter is required. Defaults to true"
                     },
-                    "default": {}
+                    "default": {
+                      "description": "Default value if the input is not provided"
+                    }
                   },
-                  "required": ["type", "description"],
-                  "additionalProperties": false
+                  "required": [
+                    "type",
+                    "description"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Input parameter definition for a tool"
                 },
                 "propertyNames": {
                   "pattern": "^[a-zA-Z0-9_-]+$"
                 },
-                "default": {}
+                "default": {},
+                "description": "Input parameters for the tool. Keys must contain only alphanumeric characters, underscores, and hyphens"
               },
               "run": {
-                "type": "string"
+                "type": "string",
+                "description": "Shell script to execute when the tool is invoked"
               },
               "timeout": {
                 "type": "number",
-                "default": 300000
+                "default": 300000,
+                "description": "Maximum execution time in milliseconds. Defaults to 300000 (5 minutes)"
               }
             },
-            "required": ["name", "description", "run"],
-            "additionalProperties": false
-          }
+            "required": [
+              "name",
+              "description",
+              "run"
+            ],
+            "additionalProperties": false,
+            "description": "Configuration for a single tool"
+          },
+          "description": "List of tools to expose via MCP"
         }
       },
-      "required": ["tools"],
-      "additionalProperties": false
+      "required": [
+        "tools"
+      ],
+      "additionalProperties": false,
+      "description": "Root configuration schema for any-script-mcp"
     }
   }
 }
