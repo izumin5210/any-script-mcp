@@ -147,11 +147,24 @@ tools:
 - `required`: 必須かどうか（デフォルト: `true`）
 - `default`: デフォルト値（オプション）
 
-入力パラメータはシェルスクリプトに環境変数として渡されます。変数名は `INPUTS__` プレフィックスが付き、大文字に変換されます（ハイフンはアンダースコアに変換）。
+入力パラメータはシェルスクリプトに2つの方法で環境変数として渡されます：
+
+#### 個別の環境変数
+変数名は `INPUTS__` プレフィックスが付き、大文字に変換されます（ハイフンはアンダースコアに変換）。
 
 例：
 - `message` → `$INPUTS__MESSAGE`
 - `branch-name` → `$INPUTS__BRANCH_NAME`
+
+#### JSON形式（INPUTS_JSON）
+すべての入力は `INPUTS_JSON` 環境変数に単一のJSONオブジェクトとしても利用できます。これにより型情報が保持され、シェル以外のインタープリタでの作業が容易になります。
+
+使用例：
+```javascript
+// Node.js
+const inputs = JSON.parse(process.env.INPUTS_JSON);
+console.log(inputs.num * 2); // numは文字列ではなく数値
+```
 
 ### Shellオプション
 
@@ -193,6 +206,18 @@ tools:
       const endpoint = Deno.env.get("INPUTS__ENDPOINT");
       const response = await fetch(endpoint);
       console.log(await response.json());
+  
+  # INPUTS_JSONを使用した型保持の例
+  - name: add_2
+    description: add 2 to a number
+    shell: "node {0}"
+    inputs:
+      num:
+        type: number
+        description: a number to add 2 to
+    run: |
+      const inputs = JSON.parse(process.env.INPUTS_JSON);
+      console.log(inputs.num + 2); // numは文字列ではなく数値
 ```
 
 #### 高度な例 - AIエージェントとWeb検索
@@ -201,19 +226,20 @@ tools:
 # yaml-language-server: $schema=https://raw.githubusercontent.com/izumin5210/any-script-mcp/main/config.schema.json
 tools:
   - name: gemini-search
-    description: Gemini 2.5 FlashとWeb検索を使用したAIエージェント
+    description: AI agent with web search using Gemini 2.5 Flash
     shell: "deno run -N -E {0}"
     inputs:
-      input:
+      query:
         type: string
-        description: AI検索のクエリ
+        description: Query for AI search
         required: true
     run: |
       import { GoogleGenAI } from "npm:@google/genai@^1";
+      const inputs = JSON.parse(Deno.env.get("INPUTS_JSON"));
       const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINI_API_KEY") });
       const res = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: Deno.env.get("INPUTS__INPUT")!,
+        contents: inputs.query,
         config: {
           tools: [{ googleSearch: {} }],
           systemInstruction: "...",
@@ -224,20 +250,21 @@ tools:
       );
 
   - name: gpt-5-search
-    description: GPT-5とWeb検索を使用したAIエージェント
+    description: AI agent with web search using GPT-5
     shell: "deno run -N -E {0}"
     inputs:
-      input:
+      query:
         type: string
-        description: AI検索のクエリ
+        description: Query for AI search
         required: true
     run: |
       import OpenAI from "jsr:@openai/openai";
+      const inputs = JSON.parse(Deno.env.get("INPUTS_JSON"));
       const client = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
       const res = await client.responses.create({
         model: "gpt-5",
         tools: [{ type: "web_search_preview" }],
-        input: Deno.env.get("INPUTS__INPUT"),
+        input: inputs.input,
         instructions: "...",
       });
       console.log(res.output_text);

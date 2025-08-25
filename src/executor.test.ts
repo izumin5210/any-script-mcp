@@ -235,4 +235,192 @@ echo "Success"`,
     expect(lines[0]).toMatch(/^Script path: .*script-.*$/);
     expect(lines[1]).toBe("Hello");
   });
+
+  it("should pass inputs as INPUTS_JSON environment variable", async () => {
+    const config = buildToolConfig({
+      name: "json_test",
+      description: "Test INPUTS_JSON environment variable",
+      inputs: {
+        message: {
+          type: "string",
+          description: "Message",
+          required: true,
+        },
+        count: {
+          type: "number",
+          description: "Count",
+          required: true,
+        },
+      },
+      run: `echo "$INPUTS_JSON"`,
+    });
+
+    const inputs = { message: "Hello", count: 42 };
+    const result = await executeCommand(config, inputs);
+    const parsed = JSON.parse(result.trim());
+    expect(parsed).toEqual(inputs);
+  });
+
+  it("should preserve types in INPUTS_JSON for Node.js", async () => {
+    const config = buildToolConfig({
+      name: "node_json_test",
+      description: "Test INPUTS_JSON with Node.js",
+      shell: "node {0}",
+      inputs: {
+        text: {
+          type: "string",
+          description: "Text value",
+          required: true,
+        },
+        number: {
+          type: "number",
+          description: "Numeric value",
+          required: true,
+        },
+        flag: {
+          type: "boolean",
+          description: "Boolean flag",
+          required: true,
+        },
+      },
+      run: `
+const inputs = JSON.parse(process.env.INPUTS_JSON);
+console.log(JSON.stringify({
+  textType: typeof inputs.text,
+  numberType: typeof inputs.number,
+  flagType: typeof inputs.flag,
+  values: inputs
+}));`,
+    });
+
+    const result = await executeCommand(config, {
+      text: "test",
+      number: 123,
+      flag: true,
+    });
+    const parsed = JSON.parse(result.trim());
+    expect(parsed.textType).toBe("string");
+    expect(parsed.numberType).toBe("number");
+    expect(parsed.flagType).toBe("boolean");
+    expect(parsed.values).toEqual({
+      text: "test",
+      number: 123,
+      flag: true,
+    });
+  });
+
+  it("should preserve types in INPUTS_JSON for Python", async () => {
+    const config = buildToolConfig({
+      name: "python_json_test",
+      description: "Test INPUTS_JSON with Python",
+      shell: "python3 {0}",
+      inputs: {
+        text: {
+          type: "string",
+          description: "Text value",
+          required: true,
+        },
+        number: {
+          type: "number",
+          description: "Numeric value",
+          required: true,
+        },
+        flag: {
+          type: "boolean",
+          description: "Boolean flag",
+          required: true,
+        },
+      },
+      run: `
+import os
+import json
+
+inputs = json.loads(os.environ['INPUTS_JSON'])
+result = {
+    'textType': type(inputs['text']).__name__,
+    'numberType': type(inputs['number']).__name__,
+    'flagType': type(inputs['flag']).__name__,
+    'values': inputs
+}
+print(json.dumps(result))`,
+    });
+
+    const result = await executeCommand(config, {
+      text: "test",
+      number: 456,
+      flag: false,
+    });
+    const parsed = JSON.parse(result.trim());
+    expect(parsed.textType).toBe("str");
+    // Python3 では number は int または float として解釈される
+    expect(["int", "float"]).toContain(parsed.numberType);
+    expect(parsed.flagType).toBe("bool");
+    expect(parsed.values).toEqual({
+      text: "test",
+      number: 456,
+      flag: false,
+    });
+  });
+
+  it("should handle complex objects in INPUTS_JSON", async () => {
+    const config = buildToolConfig({
+      name: "complex_json_test",
+      description: "Test INPUTS_JSON with complex data",
+      shell: "node {0}",
+      inputs: {
+        "user-name": {
+          type: "string",
+          description: "User name with hyphen",
+          required: true,
+        },
+        age: {
+          type: "number",
+          description: "User age",
+          required: false,
+        },
+        active: {
+          type: "boolean",
+          description: "Active status",
+          default: true,
+        },
+      },
+      run: `
+const inputs = JSON.parse(process.env.INPUTS_JSON);
+console.log(JSON.stringify(inputs));`,
+    });
+
+    const inputs = { "user-name": "Alice", age: 30, active: false };
+    const result = await executeCommand(config, inputs);
+    const parsed = JSON.parse(result.trim());
+    expect(parsed).toEqual(inputs);
+  });
+
+  it("should maintain backward compatibility with individual env vars", async () => {
+    const config = buildToolConfig({
+      name: "compatibility_test",
+      description: "Test backward compatibility",
+      inputs: {
+        message: {
+          type: "string",
+          description: "Message",
+          required: true,
+        },
+        count: {
+          type: "number",
+          description: "Count",
+          required: true,
+        },
+      },
+      run: `
+# Both individual env vars and INPUTS_JSON should be available
+echo "Individual: $INPUTS__MESSAGE - $INPUTS__COUNT"
+echo "JSON: $INPUTS_JSON"`,
+    });
+
+    const result = await executeCommand(config, { message: "Test", count: 99 });
+    const lines = result.trim().split("\n");
+    expect(lines[0]).toBe("Individual: Test - 99");
+    const parsed = JSON.parse(lines[1].replace("JSON: ", ""));
+    expect(parsed).toEqual({ message: "Test", count: 99 });
+  });
 });

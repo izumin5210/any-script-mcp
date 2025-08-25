@@ -151,11 +151,24 @@ Each input parameter has the following fields:
 - `required`: Whether the parameter is required (default: `true`)
 - `default`: Default value (optional)
 
-Input parameters are passed as environment variables to shell scripts. Variable names have the `INPUTS__` prefix and are converted to uppercase (hyphens are converted to underscores).
+Input parameters are passed as environment variables to shell scripts in two ways:
+
+#### Individual Environment Variables
+Variable names have the `INPUTS__` prefix and are converted to uppercase (hyphens are converted to underscores).
 
 Examples:
 - `message` → `$INPUTS__MESSAGE`
 - `branch-name` → `$INPUTS__BRANCH_NAME`
+
+#### JSON Format (INPUTS_JSON)
+All inputs are also available as a single JSON object in the `INPUTS_JSON` environment variable. This preserves type information, making it easier to work with non-shell interpreters.
+
+Example usage:
+```javascript
+// Node.js
+const inputs = JSON.parse(process.env.INPUTS_JSON);
+console.log(inputs.num * 2); // count is a number, not a string
+```
 
 ### Shell Option
 
@@ -197,6 +210,18 @@ tools:
       const endpoint = Deno.env.get("INPUTS__ENDPOINT");
       const response = await fetch(endpoint);
       console.log(await response.json());
+  
+  # Using INPUTS_JSON for type preservation
+  - name: add_2
+    description: add 2 to a number
+    shell: "node {0}"
+    inputs:
+      num:
+        type: number
+        description: a number to add 2 to
+    run: |
+      const inputs = JSON.parse(process.env.INPUTS_JSON);
+      console.log(inputs.num + 2); // number is a number, not a string
 ```
 
 #### Advanced Examples - AI Agents with Web Search
@@ -208,16 +233,17 @@ tools:
     description: AI agent with web search using Gemini 2.5 Flash
     shell: "deno run -N -E {0}"
     inputs:
-      input:
+      query:
         type: string
         description: Query for AI search
         required: true
     run: |
       import { GoogleGenAI } from "npm:@google/genai@^1";
+      const inputs = JSON.parse(Deno.env.get("INPUTS_JSON"));
       const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINI_API_KEY") });
       const res = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: Deno.env.get("INPUTS__INPUT")!,
+        contents: inputs.query,
         config: {
           tools: [{ googleSearch: {} }],
           systemInstruction: "...",
@@ -231,17 +257,18 @@ tools:
     description: AI agent with web search using GPT-5
     shell: "deno run -N -E {0}"
     inputs:
-      input:
+      query:
         type: string
         description: Query for AI search
         required: true
     run: |
       import OpenAI from "jsr:@openai/openai";
+      const inputs = JSON.parse(Deno.env.get("INPUTS_JSON"));
       const client = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
       const res = await client.responses.create({
         model: "gpt-5",
         tools: [{ type: "web_search_preview" }],
-        input: Deno.env.get("INPUTS__INPUT"),
+        input: inputs.query,
         instructions: "...",
       });
       console.log(res.output_text);

@@ -24,6 +24,9 @@ export async function executeCommand(
       env[envKey] = String(value);
     }
 
+    // Also provide inputs as JSON to preserve type information
+    env["INPUTS_JSON"] = JSON.stringify(inputs);
+
     // Replace all {0} placeholders with the script file path
     const command = config.shell.replaceAll("{0}", tmpFile);
 
