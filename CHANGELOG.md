@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-08-25
+
+### Added
+- `INPUTS_JSON` environment variable that passes all inputs as a single JSON object, preserving type information (numbers, booleans) for non-shell interpreters ([#13](https://github.com/izumin5210/any-script-mcp/pull/13))
+
 ## [0.2.0] - 2025-08-25
 
 ### Added
