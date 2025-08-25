@@ -20,6 +20,12 @@
         // Disabled because it conflicts with TypeScript's noPropertyAccessFromIndexSignature
         // We need to use bracket notation for process.env access to maintain type safety
         "useLiteralKeys": "off"
+      },
+      "correctness": {
+        "noUnusedImports": {
+          "level": "error",
+          "fix": "safe"
+        }
       }
     }
   },
