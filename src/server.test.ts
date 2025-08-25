@@ -597,4 +597,177 @@ echo "Double: $result"`,
       `);
     });
   });
+
+  describe("INPUTS_JSON environment variable", () => {
+    it("should pass inputs as INPUTS_JSON with type preservation", async () => {
+      const config: Config = {
+        tools: [
+          {
+            name: "json_type_test",
+            description: "Test INPUTS_JSON with types",
+            inputs: {
+              text: {
+                type: "string",
+                description: "Text value",
+                required: true,
+              },
+              number: {
+                type: "number",
+                description: "Numeric value",
+                required: true,
+              },
+              flag: {
+                type: "boolean",
+                description: "Boolean flag",
+                required: true,
+              },
+            },
+            run: `
+node -e "
+const inputs = JSON.parse(process.env.INPUTS_JSON);
+console.log(JSON.stringify({
+  receivedTypes: {
+    text: typeof inputs.text,
+    number: typeof inputs.number,
+    flag: typeof inputs.flag
+  },
+  values: inputs
+}));"`,
+            shell: "bash -e {0}",
+            timeout: 60_000,
+          },
+        ],
+      };
+
+      await setupTestServer(config);
+
+      const result = await client.callTool({
+        name: "json_type_test",
+        arguments: {
+          text: "hello",
+          number: 123,
+          flag: true,
+        },
+      });
+
+      const parsed = JSON.parse(
+        result.content[0]?.type === "text" ? result.content[0].text : "{}",
+      );
+      expect(parsed.receivedTypes).toEqual({
+        text: "string",
+        number: "number",
+        flag: "boolean",
+      });
+      expect(parsed.values).toEqual({
+        text: "hello",
+        number: 123,
+        flag: true,
+      });
+    });
+
+    it("should work with Python scripts using INPUTS_JSON", async () => {
+      const config: Config = {
+        tools: [
+          {
+            name: "python_json_test",
+            description: "Test INPUTS_JSON with Python",
+            inputs: {
+              message: {
+                type: "string",
+                description: "Message",
+                required: true,
+              },
+              multiplier: {
+                type: "number",
+                description: "Multiplier",
+                required: true,
+              },
+            },
+            run: `
+import os
+import json
+
+inputs = json.loads(os.environ['INPUTS_JSON'])
+result = {
+    'message': inputs['message'],
+    'result': inputs['multiplier'] * 2,
+    'types': {
+        'message': type(inputs['message']).__name__,
+        'multiplier': type(inputs['multiplier']).__name__
+    }
+}
+print(json.dumps(result))`,
+            shell: "python3 {0}",
+            timeout: 60_000,
+          },
+        ],
+      };
+
+      await setupTestServer(config);
+
+      const result = await client.callTool({
+        name: "python_json_test",
+        arguments: {
+          message: "test",
+          multiplier: 21,
+        },
+      });
+
+      const parsed = JSON.parse(
+        result.content[0]?.type === "text" ? result.content[0].text : "{}",
+      );
+      expect(parsed.message).toBe("test");
+      expect(parsed.result).toBe(42);
+      expect(parsed.types.message).toBe("str");
+      expect(["int", "float"]).toContain(parsed.types.multiplier);
+    });
+
+    it("should maintain backward compatibility with individual env vars", async () => {
+      const config: Config = {
+        tools: [
+          {
+            name: "compatibility_test",
+            description: "Test backward compatibility",
+            inputs: {
+              "user-name": {
+                type: "string",
+                description: "User name",
+                required: true,
+              },
+              age: {
+                type: "number",
+                description: "Age",
+                required: true,
+              },
+            },
+            run: `
+echo "Individual vars: $INPUTS__USER_NAME, $INPUTS__AGE"
+echo "JSON: $INPUTS_JSON"`,
+            shell: "bash -e {0}",
+            timeout: 60_000,
+          },
+        ],
+      };
+
+      await setupTestServer(config);
+
+      const result = await client.callTool({
+        name: "compatibility_test",
+        arguments: {
+          "user-name": "Alice",
+          age: 25,
+        },
+      });
+
+      const output =
+        result.content[0]?.type === "text" ? result.content[0].text : "";
+      const lines = output.trim().split("\n");
+      expect(lines[0]).toBe("Individual vars: Alice, 25");
+      const parsed = JSON.parse(lines[1].replace("JSON: ", ""));
+      expect(parsed).toEqual({
+        "user-name": "Alice",
+        age: 25,
+      });
+    });
+  });
 });
