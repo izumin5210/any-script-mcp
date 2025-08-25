@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-08-25
+
+### Added
+- Configurable shell option for tool execution with default value `bash -e {0}`, enabling support for Python, Node.js, Deno, Ruby, and other interpreters ([#10](https://github.com/izumin5210/any-script-mcp/pull/10))
+- JSON Schema generation for configuration file to enable autocompletion and validation in editors ([#9](https://github.com/izumin5210/any-script-mcp/pull/9))
+- Comprehensive E2E test suite for MCP server functionality ([#11](https://github.com/izumin5210/any-script-mcp/pull/11))
+
+### Changed
+- Refactored server creation logic from `index.ts` to `server.ts` for better testability ([#11](https://github.com/izumin5210/any-script-mcp/pull/11))
+
 ## [0.1.0] - 2025-08-17
 
 ### Added
